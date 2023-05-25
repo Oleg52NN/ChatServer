@@ -4,18 +4,18 @@ import java.io.*;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
-import static server.ServerChat.userMap;
-import static server.Story.outData;
-import static server.Story.writeLog;
+import static server.Server.userMap;
+import static server.ChatHistoryAndLogging.outData;
+import static server.ChatHistoryAndLogging.writeLog;
 
-class OneOfMany extends Thread {
+class WorkingWithChatVisitor extends Thread {
 
     private final Socket socket;
     private final BufferedReader in;
     private final BufferedWriter out;
     public  String nickName;
 
-    public OneOfMany(Socket socket) throws IOException {
+    public WorkingWithChatVisitor(Socket socket) throws IOException {
         this.socket = socket;
         in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
         out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));
@@ -24,10 +24,10 @@ class OneOfMany extends Thread {
             writeLog(outData() + " Client with assigned port " + socket.getPort() + " chose a nickname: " + nickName);
             userMap.put(socket.getPort(), nickName);
         } catch (IOException e) {
-            Story.writeLog(outData() + " " + e.getMessage());
+            ChatHistoryAndLogging.writeLog(outData() + " " + e.getMessage());
             throw new RuntimeException(e);
         }
-        ServerChat.story.printStory(out);
+        Server.story.printStory(out);
         start();
     }
     @Override
@@ -47,14 +47,14 @@ class OneOfMany extends Thread {
                         message = outData() + " " + message;
                     }
                     writeLog(message);
-                    ServerChat.story.addStoryEl(" " + message);
-                    for (OneOfMany vr : ServerChat.serverList) {
+                    Server.story.addStoryEl(" " + message);
+                    for (WorkingWithChatVisitor vr : Server.serverList) {
                         vr.send(message);
                     }
                 }
         } catch (IOException e) {
                 try {
-                    Story.writeLog(outData() + " " + e.getMessage());
+                    ChatHistoryAndLogging.writeLog(outData() + " " + e.getMessage());
                 } catch (IOException ex) {
                     throw new RuntimeException(ex);
                 }

@@ -1,6 +1,8 @@
 package server;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.Charset;
@@ -11,30 +13,31 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static java.nio.file.Files.notExists;
-import static server.Story.outData;
-import static server.Story.writeLog;
+import static server.ChatHistoryAndLogging.outData;
+import static server.ChatHistoryAndLogging.writeLog;
 
-public class ServerChat {
-    static final String CHAT_DIR = "Chat\\";
+public class Server {
+    static String fileSeparator = File.separator;
+    static final String CHAT_DIR = "Chat" + fileSeparator;
     private static final String CONFIG_FILE = "server.cfg";
-    static final Path WORK_DIR = Path.of(System.getProperty("user.home") + "\\" + CHAT_DIR);
-    private static final Path CFG_FILE = Path.of(WORK_DIR + "\\" + CONFIG_FILE);
+    static final Path WORK_DIR = Path.of(System.getProperty("user.home") + fileSeparator + CHAT_DIR);
+    private static final Path CFG_FILE = Path.of(WORK_DIR + fileSeparator + CONFIG_FILE);
     private static final Properties properties = new Properties();
     private static int PORT;
     public static ConcurrentHashMap<Integer, String> userMap = new ConcurrentHashMap<>();
-    public static LinkedList<OneOfMany> serverList = new LinkedList<>();
-    public static Story story;
+    public static LinkedList<WorkingWithChatVisitor> serverList = new LinkedList<>();
+    public static ChatHistoryAndLogging story;
     public static final String serverStart = "Server Started";
 
 
-    public static void main(String[] args) throws IOException {
+    public void listen() throws IOException {
         try {
             fileConfig();
         } catch (IOException e) {
-            Story.writeLog(outData() + " " + e.getMessage());
+            ChatHistoryAndLogging.writeLog(outData() + " " + e.getMessage());
             throw new RuntimeException(e);
         }
-        story = new Story();
+        story = new ChatHistoryAndLogging();
         System.out.println(serverStart);
 
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
@@ -43,14 +46,14 @@ public class ServerChat {
                 Socket clientSocket = serverSocket.accept();
                 try {
                     writeLog(outData() + " A client has joined the chat. Dedicated port:" + clientSocket.getPort());
-                    serverList.add(new OneOfMany(clientSocket));
+                    serverList.add(new WorkingWithChatVisitor(clientSocket));
                 } catch (IOException e) {
-                    Story.writeLog(outData() + " " + e.getMessage());
+                    ChatHistoryAndLogging.writeLog(outData() + " " + e.getMessage());
                     clientSocket.close();
                 }
             }
         } catch (IOException e) {
-            Story.writeLog(outData() + " " + e.getMessage());
+            ChatHistoryAndLogging.writeLog(outData() + " " + e.getMessage());
             throw new RuntimeException(e);
         }
     }
@@ -78,5 +81,4 @@ public class ServerChat {
             PORT = Integer.parseInt(properties.getProperty("PORT"));
         }
     }
-
 }

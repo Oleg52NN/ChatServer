@@ -9,30 +9,30 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedList;
 
-import static server.ServerChat.WORK_DIR;
-import static server.ServerChat.userMap;
+import static server.Server.WORK_DIR;
+import static server.Server.userMap;
 
 
-public class Story {
-    private final LinkedList<String> story = new LinkedList<>();
+public class ChatHistoryAndLogging {
+    private final LinkedList<String> briefChatHistory = new LinkedList<>();
 
 
     public void addStoryEl(String text) throws IOException {
-        if (story.size() >= 7) {
-            story.removeFirst();
-            story.add(text);
+        if (briefChatHistory.size() >= 7) {
+            briefChatHistory.removeFirst();
+            briefChatHistory.add(text);
         } else {
-            story.add(text);
+            briefChatHistory.add(text);
         }
     }
 
 
     public void printStory(BufferedWriter writer) throws IOException {
-        if(story.size() > 0) {
+        if(briefChatHistory.size() > 0) {
             writeLog(outData() + " Клиенту отправлена краткая история сообщений и количество действующих участников чата");
             try {
                 writer.write("Recent posts" + "\n");
-                for (String vr : story) {
+                for (String vr : briefChatHistory) {
                     writer.write(vr + "\n");
                 }
                 writer.write("-------------" + "\n");
@@ -58,7 +58,7 @@ static void writeLog(String text) throws IOException {
             );
 
         } catch (IOException e) {
-            Story.writeLog(outData() + " " + e.getMessage());
+            ChatHistoryAndLogging.writeLog(outData() + " " + e.getMessage());
             e.printStackTrace();
         }
 
